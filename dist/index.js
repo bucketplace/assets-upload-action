@@ -123,6 +123,7 @@ function getAuthToken() {
 //   return new Promise(resolve => setTimeout(resolve, ms))
 // }
 function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const form = new form_data_1.default();
         form.append('upload', fileBuffer, {
@@ -138,7 +139,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             body: form
         });
         if (res.status !== 200)
-            throw Error(yield res.text());
+            throw Error((_a = (yield res.json())) === null || _a === void 0 ? void 0 : _a.message);
     });
 }
 function uploadAssets(sourceDir, destinationDir, concurrency) {
