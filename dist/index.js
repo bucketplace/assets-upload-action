@@ -103,7 +103,6 @@ const klaw_sync_1 = __importDefault(__nccwpck_require__(36));
 const promise_pool_1 = __importDefault(__nccwpck_require__(465));
 const path_1 = __importDefault(__nccwpck_require__(622));
 const form_data_1 = __importDefault(__nccwpck_require__(334));
-const core = __importStar(__nccwpck_require__(186));
 const fs = __importStar(__nccwpck_require__(747));
 function getBaseUrl() {
     let url = process.env.BASE_URL;
@@ -123,7 +122,6 @@ function getAuthToken() {
 //   return new Promise(resolve => setTimeout(resolve, ms))
 // }
 function upload(baseUrl, token, fileStream, objectName) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const form = new form_data_1.default();
         form.append('upload', fileStream);
@@ -135,10 +133,8 @@ function upload(baseUrl, token, fileStream, objectName) {
             },
             body: form
         });
-        if (res.status !== 200) {
-            core.info(JSON.stringify(res));
-            throw Error((_a = (yield res.json())) === null || _a === void 0 ? void 0 : _a.message);
-        }
+        if (res.status !== 200)
+            throw Error(yield res.text());
     });
 }
 function uploadAssets(sourceDir, destinationDir, concurrency) {

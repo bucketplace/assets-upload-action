@@ -3,7 +3,6 @@ import klawSync from 'klaw-sync'
 import PromisePool from '@supercharge/promise-pool'
 import path from 'path'
 import FormData from 'form-data'
-import * as core from '@actions/core'
 import * as fs from 'fs'
 
 function getBaseUrl(): string {
