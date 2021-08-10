@@ -1,0 +1,14 @@
+name: 'Assets Upload Action'
+description: 'Action for upload assets'
+author: 'zezaeoh <zezaeoh@github.com>'
+inputs:
+  source-dir:
+    required: true
+    description: 'directory to upload'
+  destination-dir:
+    required: false
+    default: /
+    description: 'destination directory for upload'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
