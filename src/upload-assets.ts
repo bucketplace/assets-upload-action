@@ -39,7 +39,7 @@ async function upload(
   const res = await fetch(`${baseUrl}/cdn/assets`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/json',
       Authorization: `Token ${token}`
     },
     body: form
