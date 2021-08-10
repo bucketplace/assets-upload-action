@@ -103,6 +103,7 @@ const klaw_sync_1 = __importDefault(__nccwpck_require__(36));
 const promise_pool_1 = __importDefault(__nccwpck_require__(465));
 const path_1 = __importDefault(__nccwpck_require__(622));
 const form_data_1 = __importDefault(__nccwpck_require__(334));
+const core = __importStar(__nccwpck_require__(186));
 const fs = __importStar(__nccwpck_require__(747));
 function getBaseUrl() {
     let url = process.env.BASE_URL;
@@ -130,13 +131,14 @@ function upload(baseUrl, token, fileStream, objectName) {
         const res = yield node_fetch_1.default(`${baseUrl}/cdn/assets`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'multipart/form-data',
                 Authorization: `Token ${token}`
             },
             body: form
         });
-        if (res.status !== 200)
+        if (res.status !== 200) {
+            core.info(JSON.stringify(res));
             throw Error((_a = (yield res.json())) === null || _a === void 0 ? void 0 : _a.message);
+        }
     });
 }
 function uploadAssets(sourceDir, destinationDir, concurrency) {

@@ -3,6 +3,7 @@ import klawSync from 'klaw-sync'
 import PromisePool from '@supercharge/promise-pool'
 import path from 'path'
 import FormData from 'form-data'
+import * as core from '@actions/core'
 import * as fs from 'fs'
 
 function getBaseUrl(): string {
@@ -39,13 +40,15 @@ async function upload(
   const res = await fetch(`${baseUrl}/cdn/assets`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Token ${token}`
     },
     body: form
   })
 
-  if (res.status !== 200) throw Error((await res.json())?.message)
+  if (res.status !== 200) {
+    core.info(JSON.stringify(res))
+    throw Error((await res.json())?.message)
+  }
 }
 
 export async function uploadAssets(
