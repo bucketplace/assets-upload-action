@@ -45,7 +45,10 @@ function run() {
             const destination = core.getInput('destination-dir', {
                 required: false
             });
-            yield upload_assets_1.uploadAssets(source, destination);
+            const concurrency = core.getInput('concurrency', {
+                required: false
+            });
+            yield upload_assets_1.uploadAssets(source, destination, concurrency);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -136,9 +139,9 @@ function upload(baseUrl, token, fileStream, objectName) {
             throw Error((_a = (yield res.json())) === null || _a === void 0 ? void 0 : _a.message);
     });
 }
-function uploadAssets(sourceDir, destinationDir) {
+function uploadAssets(sourceDir, destinationDir, concurrency) {
     return __awaiter(this, void 0, void 0, function* () {
-        const concurrency = 5;
+        const cn = Number(concurrency) || 5;
         const absSourceDir = path_1.default.join(process.cwd(), sourceDir);
         const paths = klaw_sync_1.default(sourceDir, {
             nodir: true
@@ -152,7 +155,7 @@ function uploadAssets(sourceDir, destinationDir) {
             };
         });
         const { errors } = yield promise_pool_1.default.for(uploadTargets)
-            .withConcurrency(concurrency)
+            .withConcurrency(cn)
             .process((i) => __awaiter(this, void 0, void 0, function* () { return upload(baseUrl, token, i.fileStream, i.objectName); }));
         if (errors.length > 0)
             throw Error(errors.map(e => e.message).join('\n'));

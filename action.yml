@@ -9,6 +9,10 @@ inputs:
     required: false
     default: /
     description: 'destination directory for upload'
+  concurrency:
+    required: false
+    default: "5"
+    description: 'destination directory for upload'
 runs:
   using: 'node12'
   main: 'dist/index.js'

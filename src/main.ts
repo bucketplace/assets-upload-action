@@ -7,8 +7,11 @@ async function run(): Promise<void> {
     const destination: string = core.getInput('destination-dir', {
       required: false
     })
+    const concurrency: string = core.getInput('concurrency', {
+      required: false
+    })
 
-    await uploadAssets(source, destination)
+    await uploadAssets(source, destination, concurrency)
   } catch (error) {
     core.setFailed(error.message)
   }

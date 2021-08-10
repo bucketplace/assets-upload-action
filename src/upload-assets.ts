@@ -50,9 +50,10 @@ async function upload(
 
 export async function uploadAssets(
   sourceDir: string,
-  destinationDir: string
+  destinationDir: string,
+  concurrency: string
 ): Promise<void> {
-  const concurrency = 5
+  const cn = Number(concurrency) || 5
 
   const absSourceDir = path.join(process.cwd(), sourceDir)
   const paths = klawSync(sourceDir, {
@@ -72,7 +73,7 @@ export async function uploadAssets(
   })
 
   const {errors} = await PromisePool.for(uploadTargets)
-    .withConcurrency(concurrency)
+    .withConcurrency(cn)
     .process(async i => upload(baseUrl, token, i.fileStream, i.objectName))
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
