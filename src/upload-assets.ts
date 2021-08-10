@@ -45,10 +45,7 @@ async function upload(
     body: form
   })
 
-  if (res.status !== 200) {
-    core.info(JSON.stringify(res))
-    throw Error((await res.json())?.message)
-  }
+  if (res.status !== 200) throw Error(await res.text())
 }
 
 export async function uploadAssets(
