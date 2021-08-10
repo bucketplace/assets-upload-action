@@ -4,12 +4,10 @@ import * as path from 'path'
 
 // shows how the runner will run a javascript action with env / stdout protocol
 test('test runs', () => {
-  process.env['INPUT_PROFILE'] = 'stage'
-  process.env['INPUT_MANIFEST-PATH'] = 'commerce/search'
-  process.env['INPUT_IMAGE-TAG'] = 'test'
-  process.env['INPUT_VERSION'] = 'zezaetest'
-  process.env['AUTH_TOKEN'] = ''
-  process.env['BASE_URL'] = 'http://127.0.0.1:5000'
+  process.env['INPUT_SOURCE-DIR'] = 'public-static/'
+  process.env['INPUT_DESTINATION-DIR'] = 'bucket-ds/'
+  process.env['AUTH_TOKEN'] = 'UnXLFzjYsaDHGJTo0QIsyVkBSA9IrvJxzOL77wfe'
+  process.env['BASE_URL'] = 'https://opsmon.dailyhou.se'
 
   const np = process.execPath
   const ip = path.join(__dirname, '..', 'lib', 'main.js')

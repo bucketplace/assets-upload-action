@@ -4,6 +4,7 @@ import PromisePool from '@supercharge/promise-pool'
 import path from 'path'
 import FormData from 'form-data'
 import * as fs from 'fs'
+import {lookup} from 'mime-types'
 
 function getBaseUrl(): string {
   let url = process.env.BASE_URL
@@ -29,11 +30,16 @@ function getAuthToken(): string {
 async function upload(
   baseUrl: string,
   token: string,
-  fileStream: fs.ReadStream,
+  fileBuffer: Buffer,
+  filename: string,
+  contentType: string,
   objectName: string
 ): Promise<void> {
   const form = new FormData()
-  form.append('upload', fileStream)
+  form.append('upload', fileBuffer, {
+    filename,
+    contentType
+  })
   form.append('object_name', objectName)
 
   const res = await fetch(`${baseUrl}/cdn/assets`, {
@@ -62,18 +68,31 @@ export async function uploadAssets(
   const baseUrl = getBaseUrl()
   const token = getAuthToken()
   const uploadTargets: {
-    fileStream: fs.ReadStream
+    fileBuffer: Buffer
+    filename: string
+    contentType: string
     objectName: string
   }[] = paths.map(p => {
     return {
-      fileStream: fs.createReadStream(p.path),
+      fileBuffer: fs.readFileSync(p.path),
+      filename: path.basename(p.path),
+      contentType: lookup(p.path) || 'text/plain',
       objectName: path.join(destinationDir, path.relative(absSourceDir, p.path))
     }
   })
 
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
-    .process(async i => upload(baseUrl, token, i.fileStream, i.objectName))
+    .process(async i =>
+      upload(
+        baseUrl,
+        token,
+        i.fileBuffer,
+        i.filename,
+        i.contentType,
+        i.objectName
+      )
+    )
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
 }
