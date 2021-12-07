@@ -119,11 +119,11 @@ function getAuthToken() {
         throw ReferenceError('There is no token defined in the environment variables');
     return token;
 }
-// async function sleep(ms: number): Promise<void> {
-//   return new Promise(resolve => setTimeout(resolve, ms))
-// }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getErrorMsg(obj) {
+    return obj.detail || JSON.stringify(obj, null, 2);
+}
 function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const form = new form_data_1.default();
         form.append('upload', fileBuffer, {
@@ -131,7 +131,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             contentType
         });
         form.append('object_name', objectName);
-        const res = yield node_fetch_1.default(`${baseUrl}/cdn/assets`, {
+        const res = yield node_fetch_1.default(`${baseUrl}/api/v1/assets/`, {
             method: 'POST',
             headers: {
                 Authorization: `Token ${token}`
@@ -139,7 +139,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             body: form
         });
         if (res.status !== 200)
-            throw Error((_a = (yield res.json())) === null || _a === void 0 ? void 0 : _a.message);
+            throw Error(getErrorMsg(yield res.json()));
     });
 }
 function uploadAssets(sourceDir, destinationDir, concurrency) {

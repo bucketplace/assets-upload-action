@@ -23,9 +23,10 @@ function getAuthToken(): string {
   return token
 }
 
-// async function sleep(ms: number): Promise<void> {
-//   return new Promise(resolve => setTimeout(resolve, ms))
-// }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getErrorMsg(obj: any): string {
+  return obj.detail || JSON.stringify(obj, null, 2)
+}
 
 async function upload(
   baseUrl: string,
@@ -42,7 +43,7 @@ async function upload(
   })
   form.append('object_name', objectName)
 
-  const res = await fetch(`${baseUrl}/cdn/assets`, {
+  const res = await fetch(`${baseUrl}/api/v1/assets/`, {
     method: 'POST',
     headers: {
       Authorization: `Token ${token}`
@@ -50,7 +51,7 @@ async function upload(
     body: form
   })
 
-  if (res.status !== 200) throw Error((await res.json())?.message)
+  if (res.status !== 200) throw Error(getErrorMsg(await res.json()))
 }
 
 export async function uploadAssets(
