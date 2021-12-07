@@ -119,10 +119,9 @@ function getAuthToken() {
         throw ReferenceError('There is no token defined in the environment variables');
     return token;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getErrorMsg(obj) {
-    return obj.detail || JSON.stringify(obj, null, 2);
-}
+// function getErrorMsg(obj: any): string {
+//   return obj.detail || JSON.stringify(obj, null, 2)
+// }
 function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
     return __awaiter(this, void 0, void 0, function* () {
         const form = new form_data_1.default();
@@ -139,7 +138,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             body: form
         });
         if (res.status !== 200)
-            throw Error(getErrorMsg(yield res.json()));
+            throw Error(yield res.text());
     });
 }
 function uploadAssets(sourceDir, destinationDir, concurrency) {

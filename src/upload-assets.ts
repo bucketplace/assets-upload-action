@@ -23,10 +23,9 @@ function getAuthToken(): string {
   return token
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getErrorMsg(obj: any): string {
-  return obj.detail || JSON.stringify(obj, null, 2)
-}
+// function getErrorMsg(obj: any): string {
+//   return obj.detail || JSON.stringify(obj, null, 2)
+// }
 
 async function upload(
   baseUrl: string,
@@ -51,7 +50,7 @@ async function upload(
     body: form
   })
 
-  if (res.status !== 200) throw Error(getErrorMsg(await res.json()))
+  if (res.status !== 200) throw Error(await res.text())
 }
 
 export async function uploadAssets(
