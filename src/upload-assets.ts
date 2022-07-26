@@ -34,7 +34,8 @@ async function upload(
   fileBuffer: Buffer,
   filename: string,
   contentType: string,
-  objectName: string
+  objectName: string,
+  bucket?: string
 ): Promise<void> {
   const form = new FormData()
   form.append('upload', fileBuffer, {
@@ -43,7 +44,10 @@ async function upload(
   })
   form.append('object_name', objectName)
 
-  const res = await fetch(`${baseUrl}/api/v1/assets/`, {
+  let endpoint = `${baseUrl}/api/v1/assets/`
+  if (bucket) endpoint += `?${new URLSearchParams({bucket})}}`
+
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       Authorization: `Token ${token}`
@@ -57,7 +61,8 @@ async function upload(
 export async function uploadAssets(
   sourceDir: string,
   destinationDir: string,
-  concurrency: string
+  concurrency: string,
+  bucket?: string
 ): Promise<void> {
   const cn = Number(concurrency) || 5
 
@@ -73,12 +78,17 @@ export async function uploadAssets(
     filename: string
     contentType: string
     objectName: string
+    bucket?: string
   }[] = paths.map(p => {
     return {
       fileBuffer: fs.readFileSync(p.path),
       filename: path.basename(p.path),
       contentType: lookup(p.path) || 'text/plain',
-      objectName: path.join(destinationDir, path.relative(absSourceDir, p.path))
+      objectName: path.join(
+        destinationDir,
+        path.relative(absSourceDir, p.path)
+      ),
+      bucket
     }
   })
 
@@ -91,7 +101,8 @@ export async function uploadAssets(
         i.fileBuffer,
         i.filename,
         i.contentType,
-        i.objectName
+        i.objectName,
+        i.bucket
       )
     )
 

@@ -48,7 +48,10 @@ function run() {
             const concurrency = core.getInput('concurrency', {
                 required: false
             });
-            yield upload_assets_1.uploadAssets(source, destination, concurrency);
+            const bucket = core.getInput('bucket', {
+                required: false
+            });
+            yield upload_assets_1.uploadAssets(source, destination, concurrency, bucket ? bucket : undefined);
         }
         catch (error) {
             core.setFailed(error.message);
@@ -123,7 +126,7 @@ function getAuthToken() {
 function getErrorMsg(obj) {
     return obj.detail || JSON.stringify(obj, null, 2);
 }
-function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
+function upload(baseUrl, token, fileBuffer, filename, contentType, objectName, bucket) {
     return __awaiter(this, void 0, void 0, function* () {
         const form = new form_data_1.default();
         form.append('upload', fileBuffer, {
@@ -131,7 +134,10 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             contentType
         });
         form.append('object_name', objectName);
-        const res = yield node_fetch_1.default(`${baseUrl}/api/v1/assets/`, {
+        let endpoint = `${baseUrl}/api/v1/assets/`;
+        if (bucket)
+            endpoint += `?${new URLSearchParams({ bucket })}}`;
+        const res = yield node_fetch_1.default(endpoint, {
             method: 'POST',
             headers: {
                 Authorization: `Token ${token}`
@@ -142,7 +148,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName) {
             throw Error(getErrorMsg(yield res.json()));
     });
 }
-function uploadAssets(sourceDir, destinationDir, concurrency) {
+function uploadAssets(sourceDir, destinationDir, concurrency, bucket) {
     return __awaiter(this, void 0, void 0, function* () {
         const cn = Number(concurrency) || 5;
         const absSourceDir = path_1.default.join(process.cwd(), sourceDir);
@@ -156,13 +162,14 @@ function uploadAssets(sourceDir, destinationDir, concurrency) {
                 fileBuffer: fs.readFileSync(p.path),
                 filename: path_1.default.basename(p.path),
                 contentType: mime_types_1.lookup(p.path) || 'text/plain',
-                objectName: path_1.default.join(destinationDir, path_1.default.relative(absSourceDir, p.path))
+                objectName: path_1.default.join(destinationDir, path_1.default.relative(absSourceDir, p.path)),
+                bucket
             };
         });
         const { errors } = yield promise_pool_1.default.for(uploadTargets)
             .withConcurrency(cn)
             .process((i) => __awaiter(this, void 0, void 0, function* () {
-            return upload(baseUrl, token, i.fileBuffer, i.filename, i.contentType, i.objectName);
+            return upload(baseUrl, token, i.fileBuffer, i.filename, i.contentType, i.objectName, i.bucket);
         }));
         if (errors.length > 0)
             throw Error(errors.map(e => e.message).join('\n'));

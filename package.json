@@ -1,6 +1,6 @@
 {
   "name": "assets-upload-action",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "description": "action for upload assets",
   "main": "lib/main.js",
