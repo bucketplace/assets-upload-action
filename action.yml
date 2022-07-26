@@ -12,7 +12,10 @@ inputs:
   concurrency:
     required: false
     default: "5"
-    description: 'destination directory for upload'
+    description: 'concurrency level'
+  bucket:
+    required: false
+    description: 's3 bucket name to upload'
 runs:
   using: 'node12'
   main: 'dist/index.js'

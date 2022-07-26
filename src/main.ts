@@ -10,8 +10,16 @@ async function run(): Promise<void> {
     const concurrency: string = core.getInput('concurrency', {
       required: false
     })
+    const bucket: string = core.getInput('bucket', {
+      required: false
+    })
 
-    await uploadAssets(source, destination, concurrency)
+    await uploadAssets(
+      source,
+      destination,
+      concurrency,
+      bucket ? bucket : undefined
+    )
   } catch (error) {
     core.setFailed(error.message)
   }
