@@ -136,7 +136,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName, b
         form.append('object_name', objectName);
         let endpoint = `${baseUrl}/api/v1/assets/`;
         if (bucket)
-            endpoint += `?${new URLSearchParams({ bucket })}}`;
+            endpoint += `?${new URLSearchParams({ bucket })}`;
         const res = yield node_fetch_1.default(endpoint, {
             method: 'POST',
             headers: {

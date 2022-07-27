@@ -45,7 +45,7 @@ async function upload(
   form.append('object_name', objectName)
 
   let endpoint = `${baseUrl}/api/v1/assets/`
-  if (bucket) endpoint += `?${new URLSearchParams({bucket})}}`
+  if (bucket) endpoint += `?${new URLSearchParams({bucket})}`
 
   const res = await fetch(endpoint, {
     method: 'POST',
