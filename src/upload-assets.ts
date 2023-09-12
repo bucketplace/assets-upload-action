@@ -5,6 +5,7 @@ import path from 'path'
 import FormData from 'form-data'
 import * as fs from 'fs'
 import {lookup} from 'mime-types'
+import * as core from '@actions/core'
 
 function getBaseUrl(): string {
   let url = process.env.BASE_URL
@@ -80,16 +81,8 @@ export async function uploadAssets(
     objectName: string
     bucket?: string
   }[] = paths.map(p => {
-    let fileBuffer = Buffer.from('')
-    try {
-      fileBuffer = fs.readFileSync(p.path)
-    } catch (error) {
-      error.message(
-        `Failed to read file at ${p.path}. Using an empty buffer instead.`
-      )
-    }
     return {
-      fileBuffer,
+      fileBuffer: fs.readFileSync(p.path),
       filename: path.basename(p.path),
       contentType: lookup(p.path) || 'text/plain',
       objectName: path.join(
@@ -102,17 +95,21 @@ export async function uploadAssets(
 
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
-    .process(async i =>
-      upload(
-        baseUrl,
-        token,
-        i.fileBuffer,
-        i.filename,
-        i.contentType,
-        i.objectName,
-        i.bucket
-      )
-    )
+    .process(async i => {
+      if (i.fileBuffer.length > 0) {
+        return upload(
+          baseUrl,
+          token,
+          i.fileBuffer,
+          i.filename,
+          i.contentType,
+          i.objectName,
+          i.bucket
+        )
+      } else {
+        core.info(`Skipping empty file: ${i.filename}`)
+      }
+    })
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
 }
