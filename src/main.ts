@@ -13,18 +13,23 @@ async function run(): Promise<void> {
     const bucket: string = core.getInput('bucket', {
       required: false
     })
+    const skipFiles: string = core.getInput('skip-files', {required: false})
+    const skipFilesArray = skipFiles
+      ? skipFiles.split(',').map(file => file.trim())
+      : []
 
     await uploadAssets(
       source,
       destination,
       concurrency,
-      bucket ? bucket : undefined
+      bucket ? bucket : undefined,
+      skipFilesArray
     )
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message)
     } else {
-      core.setFailed('업로드에 실패하였습니.')
+      core.setFailed('업로드에 실패하였습니다.')
     }
   }
 }

@@ -16,6 +16,9 @@ inputs:
   bucket:
     required: false
     description: 's3 bucket name to upload'
+  skip-files:
+    required: false
+    description: 'list of skip files'
 runs:
   using: 'node16'
   main: 'dist/index.js'

@@ -54,14 +54,16 @@ function run() {
             const bucket = core.getInput('bucket', {
                 required: false
             });
-            yield (0, upload_assets_1.uploadAssets)(source, destination, concurrency, bucket ? bucket : undefined);
+            const skipFiles = core.getInput('skip-files', { required: false });
+            const skipFilesArray = skipFiles ? skipFiles.split(',').map(file => file.trim()) : [];
+            yield (0, upload_assets_1.uploadAssets)(source, destination, concurrency, bucket ? bucket : undefined, skipFilesArray);
         }
         catch (error) {
             if (error instanceof Error) {
                 core.setFailed(error.message);
             }
             else {
-                core.setFailed('업로드에 실패하였습니.');
+                core.setFailed('업로드에 실패하였습니다.');
             }
         }
     });
@@ -161,7 +163,7 @@ function upload(baseUrl, token, fileBuffer, filename, contentType, objectName, b
             throw Error(getErrorMsg(yield res.json()));
     });
 }
-function uploadAssets(sourceDir, destinationDir, concurrency, bucket) {
+function uploadAssets(sourceDir, destinationDir, concurrency, bucket, skipFiles) {
     return __awaiter(this, void 0, void 0, function* () {
         const cn = Number(concurrency) || 5;
         const absSourceDir = path_1.default.join(process.cwd(), sourceDir);
@@ -170,7 +172,9 @@ function uploadAssets(sourceDir, destinationDir, concurrency, bucket) {
         });
         const baseUrl = getBaseUrl();
         const token = getAuthToken();
-        const uploadTargets = paths.map(p => {
+        const uploadTargets = paths
+            .filter(p => !skipFiles || !skipFiles.includes(path_1.default.basename(p.path)))
+            .map(p => {
             const fileBuffer = fs.readFileSync(p.path);
             if (fileBuffer.length === 0) {
                 core.info(`비어있는 파일을 업로드합니다 : ${path_1.default.basename(p.path)}`);
