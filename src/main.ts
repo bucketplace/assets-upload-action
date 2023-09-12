@@ -13,17 +13,12 @@ async function run(): Promise<void> {
     const bucket: string = core.getInput('bucket', {
       required: false
     })
-    const skipFiles: string = core.getInput('skip-files', {required: false})
-    const skipFilesArray = skipFiles
-      ? skipFiles.split(',').map(file => file.trim())
-      : []
 
     await uploadAssets(
       source,
       destination,
       concurrency,
-      bucket ? bucket : undefined,
-      skipFilesArray
+      bucket ? bucket : undefined
     )
   } catch (error) {
     if (error instanceof Error) {

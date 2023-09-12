@@ -59,8 +59,7 @@ export async function uploadAssets(
   sourceDir: string,
   destinationDir: string,
   concurrency: string,
-  bucket?: string,
-  skipFiles?: string[]
+  bucket?: string
 ): Promise<void> {
   const cn = Number(concurrency) || 5
 
@@ -71,18 +70,12 @@ export async function uploadAssets(
 
   const baseUrl = getBaseUrl()
   const token = getAuthToken()
-  const uploadTargets: {
-    fileBuffer: Buffer
-    filename: string
-    contentType: string
-    objectName: string
-    bucket?: string
-  }[] = paths
-    .filter(p => !skipFiles || !skipFiles.includes(path.basename(p.path)))
+  const uploadTargets = paths
     .map(p => {
       const fileBuffer = fs.readFileSync(p.path)
       if (fileBuffer.length === 0) {
-        core.info(`비어있는 파일을 업로드합니다 : ${path.basename(p.path)}`)
+        core.info(`비어있는 파일은 스킵합니다 : ${path.basename(p.path)}`)
+        return
       }
       return {
         fileBuffer,
@@ -95,6 +88,13 @@ export async function uploadAssets(
         bucket
       }
     })
+    .filter(Boolean) as {
+    fileBuffer: Buffer
+    filename: string
+    contentType: string
+    objectName: string
+    bucket?: string
+  }[]
 
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
