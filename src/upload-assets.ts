@@ -81,8 +81,12 @@ export async function uploadAssets(
     objectName: string
     bucket?: string
   }[] = paths.map(p => {
+    const fileBuffer = fs.readFileSync(p.path)
+    if (fileBuffer.length === 0) {
+      core.info(`Uploading empty file: ${path.basename(p.path)}`)
+    }
     return {
-      fileBuffer: fs.readFileSync(p.path),
+      fileBuffer,
       filename: path.basename(p.path),
       contentType: lookup(p.path) || 'text/plain',
       objectName: path.join(
@@ -96,19 +100,15 @@ export async function uploadAssets(
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
     .process(async i => {
-      if (i.fileBuffer.length > 0) {
-        return upload(
-          baseUrl,
-          token,
-          i.fileBuffer,
-          i.filename,
-          i.contentType,
-          i.objectName,
-          i.bucket
-        )
-      } else {
-        core.info(`Skipping empty file: ${i.filename}`)
-      }
+      return upload(
+        baseUrl,
+        token,
+        i.fileBuffer,
+        i.filename,
+        i.contentType,
+        i.objectName,
+        i.bucket
+      )
     })
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
