@@ -58,6 +58,29 @@ async function upload(
   if (res.status !== 200) throw Error(getErrorMsg(await res.json()))
 }
 
+async function uploadFolder(
+  baseUrl: string,
+  token: string,
+  objectName: string,
+  bucket?: string
+): Promise<void> {
+  const emptyBuffer = Buffer.from('')
+
+  const markerFileName = `${
+    objectName.endsWith('/') ? objectName : `${objectName}/`
+  }`
+
+  await upload(
+    baseUrl,
+    token,
+    emptyBuffer,
+    markerFileName,
+    'application/x-directory',
+    markerFileName,
+    bucket
+  )
+}
+
 export async function uploadAssets(
   sourceDir: string,
   destinationDir: string,
@@ -67,44 +90,54 @@ export async function uploadAssets(
   const cn = Number(concurrency) || 5
 
   const absSourceDir = path.join(process.cwd(), sourceDir)
-  const paths = klawSync(sourceDir, {
-    nodir: true
-  })
+
+  const paths = klawSync(sourceDir, {nodir: false})
 
   const baseUrl = getBaseUrl()
   const token = getAuthToken()
-  const uploadTargets: {
-    fileBuffer: Buffer
-    filename: string
-    contentType: string
-    objectName: string
-    bucket?: string
-  }[] = paths.map(p => {
-    return {
-      fileBuffer: fs.readFileSync(p.path),
-      filename: path.basename(p.path),
-      contentType: lookup(p.path) || 'text/plain',
-      objectName: path.join(
+
+  const uploadTargets = []
+
+  for (const p of paths) {
+    if (p.stats.isDirectory()) {
+      const folderPath = path.join(
         destinationDir,
         path.relative(absSourceDir, p.path)
-      ),
-      bucket
+      )
+      uploadTargets.push({folderPath, bucket})
+    } else {
+      uploadTargets.push({
+        fileBuffer: fs.readFileSync(p.path),
+        filename: path.basename(p.path),
+        contentType: lookup(p.path) || 'text/plain',
+        objectName: path.join(
+          destinationDir,
+          path.relative(absSourceDir, p.path)
+        ),
+        bucket
+      })
     }
-  })
+  }
 
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
-    .process(async i =>
-      upload(
-        baseUrl,
-        token,
-        i.fileBuffer,
-        i.filename,
-        i.contentType,
-        i.objectName,
-        i.bucket
-      )
-    )
+    .process(async i => {
+      if (i.folderPath) {
+        return uploadFolder(baseUrl, token, i.folderPath, i.bucket)
+      } else {
+        if (i.fileBuffer !== undefined) {
+          return upload(
+            baseUrl,
+            token,
+            i.fileBuffer,
+            i.filename,
+            i.contentType,
+            i.objectName,
+            i.bucket
+          )
+        }
+      }
+    })
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
 }
