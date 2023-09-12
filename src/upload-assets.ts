@@ -9,18 +9,14 @@ import * as core from '@actions/core'
 
 function getBaseUrl(): string {
   let url = process.env.BASE_URL
-  if (!url)
-    throw ReferenceError('There is no url defined in the environment variables')
+  if (!url) throw ReferenceError('필수 환경변수가 비어있습니다.')
   if (url.endsWith('/')) url = url.slice(0, -1)
   return url
 }
 
 function getAuthToken(): string {
   const token = process.env.AUTH_TOKEN
-  if (!token)
-    throw ReferenceError(
-      'There is no token defined in the environment variables'
-    )
+  if (!token) throw ReferenceError('토큰이 비어있습니다.')
   return token
 }
 
@@ -83,7 +79,7 @@ export async function uploadAssets(
   }[] = paths.map(p => {
     const fileBuffer = fs.readFileSync(p.path)
     if (fileBuffer.length === 0) {
-      core.info(`Uploading empty file: ${path.basename(p.path)}`)
+      core.info(`비어있는 파일을 업로드합니다 : ${path.basename(p.path)}`)
     }
     return {
       fileBuffer,
