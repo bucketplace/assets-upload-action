@@ -5,21 +5,18 @@ import path from 'path'
 import FormData from 'form-data'
 import * as fs from 'fs'
 import {lookup} from 'mime-types'
+import * as core from '@actions/core'
 
 function getBaseUrl(): string {
   let url = process.env.BASE_URL
-  if (!url)
-    throw ReferenceError('There is no url defined in the environment variables')
+  if (!url) throw ReferenceError('필수 환경변수가 비어있습니다.')
   if (url.endsWith('/')) url = url.slice(0, -1)
   return url
 }
 
 function getAuthToken(): string {
   const token = process.env.AUTH_TOKEN
-  if (!token)
-    throw ReferenceError(
-      'There is no token defined in the environment variables'
-    )
+  if (!token) throw ReferenceError('토큰이 비어있습니다.')
   return token
 }
 
@@ -73,29 +70,36 @@ export async function uploadAssets(
 
   const baseUrl = getBaseUrl()
   const token = getAuthToken()
-  const uploadTargets: {
+  const uploadTargets = paths
+    .map(p => {
+      const fileBuffer = fs.readFileSync(p.path)
+      if (fileBuffer.length === 0) {
+        core.info(`비어있는 파일은 스킵합니다 : ${path.basename(p.path)}`)
+        return
+      }
+      return {
+        fileBuffer,
+        filename: path.basename(p.path),
+        contentType: lookup(p.path) || 'text/plain',
+        objectName: path.join(
+          destinationDir,
+          path.relative(absSourceDir, p.path)
+        ),
+        bucket
+      }
+    })
+    .filter(Boolean) as {
     fileBuffer: Buffer
     filename: string
     contentType: string
     objectName: string
     bucket?: string
-  }[] = paths.map(p => {
-    return {
-      fileBuffer: fs.readFileSync(p.path),
-      filename: path.basename(p.path),
-      contentType: lookup(p.path) || 'text/plain',
-      objectName: path.join(
-        destinationDir,
-        path.relative(absSourceDir, p.path)
-      ),
-      bucket
-    }
-  })
+  }[]
 
   const {errors} = await PromisePool.for(uploadTargets)
     .withConcurrency(cn)
-    .process(async i =>
-      upload(
+    .process(async i => {
+      return upload(
         baseUrl,
         token,
         i.fileBuffer,
@@ -104,7 +108,7 @@ export async function uploadAssets(
         i.objectName,
         i.bucket
       )
-    )
+    })
 
   if (errors.length > 0) throw Error(errors.map(e => e.message).join('\n'))
 }
